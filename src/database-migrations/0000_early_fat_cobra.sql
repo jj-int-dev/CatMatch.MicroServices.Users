@@ -264,7 +264,7 @@ CREATE TABLE "users" (
 --> statement-breakpoint
 CREATE TABLE "messages" (
 	"message_id" serial PRIMARY KEY NOT NULL,
-	"conversation_id" integer,
+	"conversation_id" integer NOT NULL,
 	"content" text NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"sender_id" uuid NOT NULL
@@ -282,8 +282,9 @@ CREATE TABLE "conversations" (
 --> statement-breakpoint
 CREATE TABLE "animal_photos" (
 	"animal_photo_id" serial PRIMARY KEY NOT NULL,
-	"animal_id" integer,
-	"photo_url" text NOT NULL
+	"animal_id" integer NOT NULL,
+	"photo_url" text NOT NULL,
+	"order" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "swipes" (
@@ -326,9 +327,9 @@ CREATE TABLE "animals" (
 	"name" varchar(200) NOT NULL,
 	"gender" varchar(50) NOT NULL,
 	"age_in_weeks" real NOT NULL,
-	"neutered" boolean,
+	"neutered" boolean NOT NULL,
 	"address_display_name" text NOT NULL,
-	"description" text,
+	"description" text NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
 	"last_updated_at" timestamp with time zone,
 	"address_latitude" numeric(8, 6) NOT NULL,

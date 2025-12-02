@@ -10,11 +10,11 @@ import { eq } from 'drizzle-orm';
  */
 export default async function (
   userId: string,
-  userTypeId: number
+  userTypeId: string
 ): Promise<number> {
   const updatedRows = await db
     .update(users)
-    .set({ userTypeId })
+    .set({ userTypeId: userTypeId })
     .where(eq(users.userId, userId))
     .returning();
   return updatedRows.length;

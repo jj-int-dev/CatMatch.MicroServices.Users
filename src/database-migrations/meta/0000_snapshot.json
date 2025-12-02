@@ -2240,7 +2240,7 @@
           "name": "conversation_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "content": {
           "name": "content",
@@ -2380,11 +2380,17 @@
           "name": "animal_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "photo_url": {
           "name": "photo_url",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         }
@@ -2717,7 +2723,7 @@
           "name": "neutered",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "address_display_name": {
           "name": "address_display_name",
@@ -2729,7 +2735,7 @@
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
