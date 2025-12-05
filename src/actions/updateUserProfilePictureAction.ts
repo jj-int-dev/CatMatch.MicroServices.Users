@@ -1,5 +1,5 @@
 import deleteUserProfilePictureCommand from '../commands/deleteUserProfilePictureCommand';
-import uploadUserProfilePictureCommand from '../commands/uploadUserProfilePictureCommand';
+import { uploadUserProfilePictureCommand } from '../commands/uploadUserProfilePictureCommand';
 import updateUserProfilePictureUrlCommand from '../commands/updateUserProfilePictureUrlCommand';
 import HttpResponseError from '../dtos/httpResponseError';
 
@@ -8,7 +8,7 @@ import HttpResponseError from '../dtos/httpResponseError';
  * @param userId The ID of the user whose profile picture should be updated
  * @param profilePicture The profile picture image file
  * @returns The url of the user's updated profile picture
- * @throws {HttpResponseError} When the user's profile pciture could not be updated
+ * @throws A {@link HttpResponseError} When the user's profile pciture could not be updated
  */
 export default async function (
   userId: string,

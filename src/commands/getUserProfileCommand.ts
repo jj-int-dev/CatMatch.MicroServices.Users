@@ -7,14 +7,18 @@ import {
 } from '../validators/database/userProfileValidator';
 import type { ZodSafeParseResult } from 'zod';
 
+export type GetUserProfileCommandResponse = Promise<
+  ZodSafeParseResult<UserProfileSchema>
+>;
+
 /**
  *
  * @param userId The ID of the user whose profile should be fetched
- * @returns The profile data if it exists
+ * @returns A {@link GetUserProfileCommandResponse}
  */
-export default async function (
+export async function getUserProfileCommand(
   userId: string
-): Promise<ZodSafeParseResult<UserProfileSchema>> {
+): GetUserProfileCommandResponse {
   return userProfileValidator.safeParse(
     await db.query.users.findFirst({
       columns: {

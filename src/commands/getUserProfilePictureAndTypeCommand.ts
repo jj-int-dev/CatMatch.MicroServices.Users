@@ -7,14 +7,18 @@ import {
 } from '../validators/database/userProfilePictureUrlAndTypeValidator';
 import type { ZodSafeParseResult } from 'zod';
 
+export type GetUserProfilePictureAndTypeCommandResponse = Promise<
+  ZodSafeParseResult<UserProfilePictureUrlAndTypeSchema>
+>;
+
 /**
  *
  * @param userId The ID of the user whose profile picture and user type should be fetched
- * @returns The profile picture url and user type if they exist
+ * @returns A {@link GetUserProfilePictureAndTypeCommandResponse}
  */
-export default async function (
+export async function getUserProfilePictureAndType(
   userId: string
-): Promise<ZodSafeParseResult<UserProfilePictureUrlAndTypeSchema>> {
+): GetUserProfilePictureAndTypeCommandResponse {
   return userProfilePictureUrlAndTypeValidator.safeParse(
     await db.query.users.findFirst({
       columns: {

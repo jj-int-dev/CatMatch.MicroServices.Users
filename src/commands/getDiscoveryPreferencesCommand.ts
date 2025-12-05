@@ -7,14 +7,18 @@ import {
 } from '../validators/database/discoveryPreferencesValidator';
 import type { ZodSafeParseResult } from 'zod';
 
+export type GetDiscoveryPreferencesCommandResponse = Promise<
+  ZodSafeParseResult<DiscoveryPreferencesSchema>
+>;
+
 /**
  *
  * @param userId The ID of the user whose discovery preferences should be updated
- * @returns The discovery preferences if they exist
+ * @returns A {@link GetDiscoveryPreferencesCommandResponse}
  */
-export default async function (
+export async function getDiscoveryPreferencesCommand(
   userId: string
-): Promise<ZodSafeParseResult<DiscoveryPreferencesSchema>> {
+): GetDiscoveryPreferencesCommandResponse {
   return discoveryPreferencesValidator.safeParse(
     await db.query.userSearchPreferences.findFirst({
       columns: {

@@ -1,15 +1,19 @@
-import getUserProfileCommand from '../commands/getUserProfileCommand';
+import { getUserProfileCommand } from '../commands/getUserProfileCommand';
 import userProfileSchemaToUserProfile from '../mappers/userProfileSchemaToUserProfile';
 import type { UserProfile } from '../dtos/userProfile';
 import HttpResponseError from '../dtos/httpResponseError';
 
+export type GetUserProfileActionResponse = Promise<UserProfile>;
+
 /**
  *
  * @param userId The ID of the user whose profile picture should be fetched
- * @returns The profile data
- * @throws {HttpResponseError} When no user data was returned from the database
+ * @returns A {@link GetUserProfileActionResponse}
+ * @throws A {@link HttpResponseError} When no user data was returned from the database
  */
-export default async function (userId: string): Promise<UserProfile> {
+export async function getUserProfileAction(
+  userId: string
+): GetUserProfileActionResponse {
   console.log('Entering GetUserProfileAction ...');
   const { success, data, error } = await getUserProfileCommand(userId);
 

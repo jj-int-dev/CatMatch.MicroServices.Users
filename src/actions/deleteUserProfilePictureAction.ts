@@ -5,7 +5,7 @@ import HttpResponseError from '../dtos/httpResponseError';
 /**
  *
  * @param userId The ID of the user whose profile picture should be deleted
- * @throws {HttpResponseError} When the user's profile pciture could not be deleted
+ * @throws A {@link HttpResponseError} If the user's profile picture could not be deleted
  */
 export default async function (userId: string): Promise<void> {
   console.log('Entering DeleteUserProfilePictureAction ...');

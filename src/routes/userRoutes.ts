@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import isAuthorized from '../validators/requests/isAuthorized';
 import userIdValidator from '../validators/requests/userIdValidator';
 import getUserProfilePictureAction from '../actions/getUserProfilePictureAction';
-import getUserProfileAction from '../actions/getUserProfileAction';
+import { getUserProfileAction } from '../actions/getUserProfileAction';
 import userCanMakeUserUpdatesValidator from '../validators/requests/userCanMakeUserUpdatesValidator';
 import userProfilePictureValidator from '../validators/requests/userProfilePictureValidator';
 import {
@@ -10,10 +10,10 @@ import {
   userProfileDataValidator
 } from '../validators/requests/userProfileDataValidator';
 import { userTypeValidator } from '../validators/requests/userTypeValidator';
-import updateUserProfileAction from '../actions/updateUserProfileAction';
+import { updateUserProfileAction } from '../actions/updateUserProfileAction';
 import updateUserTypeAction from '../actions/updateUserTypeAction';
 import getErrorResponseJson from '../utils/getErrorResponseJson';
-import getUserProfilePictureAndTypeAction from '../actions/getUserProfilePictureAndTypeAction';
+import { getUserProfilePictureAndTypeAction } from '../actions/getUserProfilePictureAndTypeAction';
 import updateUserProfilePictureAction from '../actions/updateUserProfilePictureAction';
 import deleteUserProfilePictureAction from '../actions/deleteUserProfilePictureAction';
 import updateDiscoveryPreferencesAction from '../actions/updateDiscoveryPreferencesAction';
@@ -21,7 +21,7 @@ import {
   discoveryPreferencesValidator,
   type DiscoveryPreferencesSchema
 } from '../validators/requests/discoveryPreferencesValidator';
-import getDiscoveryPreferencesAction from '../actions/getDiscoveryPreferencesAction';
+import { getDiscoveryPreferencesAction } from '../actions/getDiscoveryPreferencesAction';
 
 const router = Router();
 

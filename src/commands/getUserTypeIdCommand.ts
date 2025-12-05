@@ -7,14 +7,18 @@ import {
 } from '../validators/database/userTypeIdValidator';
 import type { ZodSafeParseResult } from 'zod';
 
+export type GetUserTypeIdCommandResponse = Promise<
+  ZodSafeParseResult<UserTypeIdSchema>
+>;
+
 /**
  *
  * @param userId The ID of the user whose user type ID should be fetched
- * @returns The user type ID if it exists
+ * @returns A {@link GetUserTypeIdCommandResponse}
  */
-export default async function (
+export async function getUserTypeIdCommand(
   userType: string
-): Promise<ZodSafeParseResult<UserTypeIdSchema>> {
+): GetUserTypeIdCommandResponse {
   return userTypeIdValidator.safeParse(
     await db.query.usertypes.findFirst({
       columns: { userTypeId: true },

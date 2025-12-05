@@ -6,7 +6,7 @@ import type { DiscoveryPreferencesSchema } from '../validators/requests/discover
  *
  * @param userId The ID of the user whose discovery preferences should be updated
  * @param discoveryPreferences The discovery preferences to set for the user
- * @throws {HttpResponseError} When the user's discovery preferences could not be updated
+ * @throws A {@link HttpResponseError} When the user's discovery preferences could not be updated
  */
 export default async function (
   userId: string,

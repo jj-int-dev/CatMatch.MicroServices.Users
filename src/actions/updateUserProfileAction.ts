@@ -2,19 +2,21 @@ import updateUserProfileDataCommand from '../commands/updateUserProfileDataComma
 import HttpResponseError from '../dtos/httpResponseError';
 import type { UserProfile } from '../dtos/userProfile';
 import type { UserProfileDataSchema } from '../validators/requests/userProfileDataValidator';
-import getUserProfileAction from './getUserProfileAction';
+import { getUserProfileAction } from './getUserProfileAction';
+
+export type UpdateUserProfileActionResponse = Promise<UserProfile>;
 
 /**
  *
  * @param userId The ID of the user whose profile should be updated
  * @param newProfileData The data to update the user's profile with
- * @returns The updated user's profile data
- * @throws {HttpResponseError} When the user's profile could not be updated
+ * @returns A {@link UpdateUserProfileActionResponse}
+ * @throws A {@link HttpResponseError} When the user's profile could not be updated
  */
-export default async function (
+export async function updateUserProfileAction(
   userId: string,
   newProfileData: UserProfileDataSchema
-): Promise<UserProfile> {
+): UpdateUserProfileActionResponse {
   console.log('Entering UpdateUserProfileAction ...');
 
   // update the rest of the user profile data

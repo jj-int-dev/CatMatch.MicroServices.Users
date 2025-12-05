@@ -1,16 +1,19 @@
-import getUserProfilePictureAndTypeCommand from '../commands/getUserProfilePictureAndTypeCommand';
+import { getUserProfilePictureAndTypeCommand } from '../commands/getUserProfilePictureAndTypeCommand';
 import HttpResponseError from '../dtos/httpResponseError';
 import type { UserProfilePictureAndType } from '../dtos/userProfilePictureAndType';
+
+export type GetUserProfilePictureAndTypeActionResponse =
+  Promise<UserProfilePictureAndType>;
 
 /**
  *
  * @param userId The ID of the user whose profile picture url and user type should be fetched
  * @returns The profile picture url and user type
- * @throws {HttpResponseError} When a valid image url and user type could not be fetched from the database
+ * @throws A {@link HttpResponseError} When a valid image url and user type could not be fetched from the database
  */
-export default async function (
+export async function getUserProfilePictureAndTypeAction(
   userId: string
-): Promise<UserProfilePictureAndType> {
+): GetUserProfilePictureAndTypeActionResponse {
   console.log('Entering GetUserProfilePictureAndTypeAction ...');
 
   const { success, data, error } =

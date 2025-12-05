@@ -1,4 +1,4 @@
-import getUserTypeIdCommand from '../commands/getUserTypeIdCommand';
+import { getUserTypeIdCommand } from '../commands/getUserTypeIdCommand';
 import updateUserTypeCommand from '../commands/updateUserTypeCommand';
 import HttpResponseError from '../dtos/httpResponseError';
 
@@ -7,7 +7,7 @@ import HttpResponseError from '../dtos/httpResponseError';
  * @param userId The ID of the user whose user type should be updated
  * @param userType The type to assign to the user
  * @returns The updated user type
- * @throws {HttpResponseError} When the user's type could not be updated
+ * @throws A {@link HttpResponseError} When the user's type could not be updated
  */
 export default async function (
   userId: string,

@@ -1,16 +1,19 @@
-import getDiscoveryPreferencesCommand from '../commands/getDiscoveryPreferencesCommand';
+import { getDiscoveryPreferencesCommand } from '../commands/getDiscoveryPreferencesCommand';
 import type { DiscoveryPreferencesSchema } from '../validators/database/discoveryPreferencesValidator';
 import HttpResponseError from '../dtos/httpResponseError';
+
+export type GetDiscoveryPreferencesActionResponse =
+  Promise<DiscoveryPreferencesSchema>;
 
 /**
  *
  * @param userId The ID of the user whose discovery preferences should be fetched
- * @returns The discovery preferences
- * @throws {HttpResponseError} If an error occurred while fetching the discovery preferences
+ * @returns A {@link GetDiscoveryPreferencesActionResponse}
+ * @throws A {@link HttpResponseError} If an error occurred while fetching the discovery preferences
  */
-export default async function (
+export async function getDiscoveryPreferencesAction(
   userId: string
-): Promise<DiscoveryPreferencesSchema> {
+): GetDiscoveryPreferencesActionResponse {
   console.log('Entering GetDiscoveryPreferencesAction ...');
   const { success, data, error } = await getDiscoveryPreferencesCommand(userId);
 

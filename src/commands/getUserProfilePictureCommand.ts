@@ -7,14 +7,18 @@ import {
 } from '../validators/database/userProfilePictureUrlValidator';
 import type { ZodSafeParseResult } from 'zod';
 
+export type GetUserProfilePictureCommandResponse = Promise<
+  ZodSafeParseResult<UserProfilePictureUrlSchema>
+>;
+
 /**
  *
  * @param userId The ID of the user whose profile picture url should be fetched
- * @returns The profile picture url if it exists
+ * @returns A {@link GetUserProfilePictureCommandResponse}
  */
-export default async function (
+export async function getUserProfilePictureCommand(
   userId: string
-): Promise<ZodSafeParseResult<UserProfilePictureUrlSchema>> {
+): GetUserProfilePictureCommandResponse {
   return userProfilePictureUrlValidator.safeParse(
     await db.query.users.findFirst({
       columns: { avatarUrl: true },

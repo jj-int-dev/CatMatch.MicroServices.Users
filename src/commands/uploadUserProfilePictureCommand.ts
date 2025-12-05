@@ -3,18 +3,22 @@ import {
   PROFILE_PICTURE_STORAGE_BUCKET
 } from '../utils/constants';
 import { supabase } from '../utils/supabaseClient';
-import type { ImageUploadResult } from '../dtos/imageUploadResult';
+
+export type ImageUploadResponse = Promise<{
+  error?: string;
+  publicUrl?: string;
+}>;
 
 /**
  *
  * @param userId The ID of the user whose profile picture should be updated
  * @param profilePicture The image file to upload
- * @returns The url of the uploaded profile picture or an error message if the upload failed
+ * @returns An {@link ImageUploadResponse}
  */
-export default async function (
+export async function uploadUserProfilePictureCommand(
   userId: string,
   profilePicture: Express.Multer.File
-): Promise<ImageUploadResult> {
+): ImageUploadResponse {
   const picturePath = `${userId}/profile_picture.${ALLOWED_FILE_TYPES[profilePicture.mimetype]}`;
 
   const { error: uploadError } = await supabase.storage

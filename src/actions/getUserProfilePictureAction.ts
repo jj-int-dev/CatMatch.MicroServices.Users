@@ -1,11 +1,11 @@
-import getUserProfilePictureCommand from '../commands/getUserProfilePictureCommand';
+import { getUserProfilePictureCommand } from '../commands/getUserProfilePictureCommand';
 import HttpResponseError from '../dtos/httpResponseError';
 
 /**
  *
  * @param userId The ID of the user whose profile picture url should be fetched
  * @returns The profile picture url
- * @throws {HttpResponseError} When a valid image url could not be fetched from the database
+ * @throws A {@link HttpResponseError} When a valid image url could not be fetched from the database
  */
 export default async function (userId: string): Promise<string | null> {
   console.log('Entering GetUserProfilePictureAction ...');
