@@ -16,7 +16,7 @@ export type GetUserProfilePictureAndTypeCommandResponse = Promise<
  * @param userId The ID of the user whose profile picture and user type should be fetched
  * @returns A {@link GetUserProfilePictureAndTypeCommandResponse}
  */
-export async function getUserProfilePictureAndType(
+export async function getUserProfilePictureAndTypeCommand(
   userId: string
 ): GetUserProfilePictureAndTypeCommandResponse {
   return userProfilePictureUrlAndTypeValidator.safeParse(
