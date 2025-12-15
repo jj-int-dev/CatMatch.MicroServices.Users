@@ -10,7 +10,10 @@ const discoveryPreferencesValidations = z
       .number()
       .min(1, 'Invalid maximum distance')
       .max(250, 'Invalid maximum distance'),
-    neutered: z.boolean('Invalid neutered status')
+    neutered: z.boolean('Invalid neutered status'),
+    locationDisplayName: z.string(),
+    searchLocLatitude: z.number('Invalid latitude'),
+    searchLocLongitude: z.number('Invalid longitude')
   })
   .refine(
     (formData) => {

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { ssoProvidersInAuth, ssoDomainsInAuth, samlProvidersInAuth, usersInAuth, mfaFactorsInAuth, sessionsInAuth, refreshTokensInAuth, flowStateInAuth, samlRelayStatesInAuth, mfaAmrClaimsInAuth, identitiesInAuth, oneTimeTokensInAuth, mfaChallengesInAuth, oauthClientsInAuth, users, conversations, usertypes, messages, swipes, userSearchPreferences, animals, animalsAdopted, animalPhotos, notifications, oauthAuthorizationsInAuth, oauthConsentsInAuth } from "./schema";
+import { ssoProvidersInAuth, ssoDomainsInAuth, samlProvidersInAuth, usersInAuth, mfaFactorsInAuth, sessionsInAuth, refreshTokensInAuth, flowStateInAuth, samlRelayStatesInAuth, mfaAmrClaimsInAuth, identitiesInAuth, oneTimeTokensInAuth, mfaChallengesInAuth, oauthClientsInAuth, users, conversations, usertypes, messages, userSearchPreferences, swipes, animals, animalsAdopted, animalPhotos, notifications, oauthAuthorizationsInAuth, oauthConsentsInAuth } from "./schema";
 
 export const ssoDomainsInAuthRelations = relations(ssoDomainsInAuth, ({one}) => ({
 	ssoProvidersInAuth: one(ssoProvidersInAuth, {
@@ -138,15 +138,15 @@ export const usersRelations = relations(users, ({one, many}) => ({
 		references: [usertypes.userTypeId]
 	}),
 	messages: many(messages),
+	userSearchPreferences: many(userSearchPreferences),
 	swipes_potentialAdopterId: many(swipes, {
 		relationName: "swipes_potentialAdopterId_users_userId"
 	}),
 	swipes_rehomerId: many(swipes, {
 		relationName: "swipes_rehomerId_users_userId"
 	}),
-	userSearchPreferences: many(userSearchPreferences),
-	animalsAdopteds: many(animalsAdopted),
 	animals: many(animals),
+	animalsAdopteds: many(animalsAdopted),
 	notifications: many(notifications),
 }));
 
@@ -165,6 +165,13 @@ export const messagesRelations = relations(messages, ({one}) => ({
 	}),
 }));
 
+export const userSearchPreferencesRelations = relations(userSearchPreferences, ({one}) => ({
+	user: one(users, {
+		fields: [userSearchPreferences.userId],
+		references: [users.userId]
+	}),
+}));
+
 export const swipesRelations = relations(swipes, ({one}) => ({
 	user_potentialAdopterId: one(users, {
 		fields: [swipes.potentialAdopterId],
@@ -178,11 +185,13 @@ export const swipesRelations = relations(swipes, ({one}) => ({
 	}),
 }));
 
-export const userSearchPreferencesRelations = relations(userSearchPreferences, ({one}) => ({
+export const animalsRelations = relations(animals, ({one, many}) => ({
 	user: one(users, {
-		fields: [userSearchPreferences.userId],
+		fields: [animals.rehomerId],
 		references: [users.userId]
 	}),
+	animalsAdopteds: many(animalsAdopted),
+	animalPhotos: many(animalPhotos),
 }));
 
 export const animalsAdoptedRelations = relations(animalsAdopted, ({one}) => ({
@@ -192,15 +201,6 @@ export const animalsAdoptedRelations = relations(animalsAdopted, ({one}) => ({
 	}),
 	user: one(users, {
 		fields: [animalsAdopted.rehomerId],
-		references: [users.userId]
-	}),
-}));
-
-export const animalsRelations = relations(animals, ({one, many}) => ({
-	animalsAdopteds: many(animalsAdopted),
-	animalPhotos: many(animalPhotos),
-	user: one(users, {
-		fields: [animals.rehomerId],
 		references: [users.userId]
 	}),
 }));

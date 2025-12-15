@@ -7,26 +7,11 @@ CREATE TYPE "auth"."aal_level" AS ENUM('aal1', 'aal2', 'aal3');--> statement-bre
 CREATE TYPE "auth"."code_challenge_method" AS ENUM('s256', 'plain');--> statement-breakpoint
 CREATE TYPE "auth"."factor_status" AS ENUM('unverified', 'verified');--> statement-breakpoint
 CREATE TYPE "auth"."factor_type" AS ENUM('totp', 'webauthn', 'phone');--> statement-breakpoint
+CREATE TYPE "auth"."oauth_authorization_status" AS ENUM('pending', 'approved', 'denied', 'expired');--> statement-breakpoint
+CREATE TYPE "auth"."oauth_client_type" AS ENUM('public', 'confidential');--> statement-breakpoint
 CREATE TYPE "auth"."oauth_registration_type" AS ENUM('dynamic', 'manual');--> statement-breakpoint
+CREATE TYPE "auth"."oauth_response_type" AS ENUM('code');--> statement-breakpoint
 CREATE TYPE "auth"."one_time_token_type" AS ENUM('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');--> statement-breakpoint
-CREATE TABLE "auth"."oauth_clients" (
-	"id" uuid NOT NULL,
-	"client_id" text NOT NULL,
-	"client_secret_hash" text NOT NULL,
-	"registration_type" "auth"."oauth_registration_type" NOT NULL,
-	"redirect_uris" text NOT NULL,
-	"grant_types" text NOT NULL,
-	"client_name" text,
-	"client_uri" text,
-	"logo_uri" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"deleted_at" timestamp with time zone,
-	CONSTRAINT "oauth_clients_client_name_length" CHECK (char_length(client_name) <= 1024),
-	CONSTRAINT "oauth_clients_client_uri_length" CHECK (char_length(client_uri) <= 2048),
-	CONSTRAINT "oauth_clients_logo_uri_length" CHECK (char_length(logo_uri) <= 2048)
-);
---> statement-breakpoint
 CREATE TABLE "auth"."sso_domains" (
 	"id" uuid NOT NULL,
 	"sso_provider_id" uuid NOT NULL,
@@ -37,6 +22,24 @@ CREATE TABLE "auth"."sso_domains" (
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."sso_domains" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "auth"."oauth_clients" (
+	"id" uuid NOT NULL,
+	"client_secret_hash" text,
+	"registration_type" "auth"."oauth_registration_type" NOT NULL,
+	"redirect_uris" text NOT NULL,
+	"grant_types" text NOT NULL,
+	"client_name" text,
+	"client_uri" text,
+	"logo_uri" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
+	"client_type" "auth"."oauth_client_type" DEFAULT 'confidential' NOT NULL,
+	CONSTRAINT "oauth_clients_client_name_length" CHECK (char_length(client_name) <= 1024),
+	CONSTRAINT "oauth_clients_client_uri_length" CHECK (char_length(client_uri) <= 2048),
+	CONSTRAINT "oauth_clients_logo_uri_length" CHECK (char_length(logo_uri) <= 2048)
+);
+--> statement-breakpoint
 CREATE TABLE "auth"."saml_providers" (
 	"id" uuid NOT NULL,
 	"sso_provider_id" uuid NOT NULL,
@@ -77,6 +80,13 @@ CREATE TABLE "auth"."schema_migrations" (
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."schema_migrations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "auth"."oauth_client_states" (
+	"id" uuid NOT NULL,
+	"provider_type" text NOT NULL,
+	"code_verifier" text,
+	"created_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "auth"."mfa_factors" (
 	"id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -89,7 +99,8 @@ CREATE TABLE "auth"."mfa_factors" (
 	"phone" text,
 	"last_challenged_at" timestamp with time zone,
 	"web_authn_credential" jsonb,
-	"web_authn_aaguid" uuid
+	"web_authn_aaguid" uuid,
+	"last_webauthn_challenge_data" jsonb
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."mfa_factors" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
@@ -168,21 +179,6 @@ CREATE TABLE "auth"."saml_relay_states" (
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."saml_relay_states" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "auth"."sessions" (
-	"id" uuid NOT NULL,
-	"user_id" uuid NOT NULL,
-	"created_at" timestamp with time zone,
-	"updated_at" timestamp with time zone,
-	"factor_id" uuid,
-	"aal" "auth"."aal_level",
-	"not_after" timestamp with time zone,
-	"refreshed_at" timestamp,
-	"user_agent" text,
-	"ip" "inet",
-	"tag" text
-);
---> statement-breakpoint
-ALTER TABLE "auth"."sessions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "auth"."mfa_amr_claims" (
 	"session_id" uuid NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
@@ -244,9 +240,39 @@ CREATE TABLE "auth"."mfa_challenges" (
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."mfa_challenges" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "auth"."sessions" (
+	"id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
+	"created_at" timestamp with time zone,
+	"updated_at" timestamp with time zone,
+	"factor_id" uuid,
+	"aal" "auth"."aal_level",
+	"not_after" timestamp with time zone,
+	"refreshed_at" timestamp,
+	"user_agent" text,
+	"ip" "inet",
+	"tag" text,
+	"oauth_client_id" uuid,
+	"refresh_token_hmac_key" text,
+	"refresh_token_counter" bigint,
+	"scopes" text,
+	CONSTRAINT "sessions_scopes_length" CHECK (char_length(scopes) <= 4096)
+);
+--> statement-breakpoint
+ALTER TABLE "auth"."sessions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "usertypes" (
-	"user_type_id" serial PRIMARY KEY NOT NULL,
-	"type" varchar(100) NOT NULL
+	"type" varchar(100) NOT NULL,
+	"user_type_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "conversations" (
+	"rehomer_last_active_at" timestamp with time zone,
+	"adopter_last_active_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"last_message_at" timestamp with time zone,
+	"adopter_id" uuid NOT NULL,
+	"rehomer_id" uuid NOT NULL,
+	"conversation_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
@@ -257,84 +283,114 @@ CREATE TABLE "users" (
 	"date_of_birth" date,
 	"avatar_url" text,
 	"bio" text,
-	"user_type_id" integer,
 	"gender" varchar,
-	"user_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+	"user_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_type_id" uuid DEFAULT gen_random_uuid() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "messages" (
-	"message_id" serial PRIMARY KEY NOT NULL,
-	"conversation_id" integer NOT NULL,
 	"content" text NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	"sender_id" uuid NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "conversations" (
-	"conversation_id" serial PRIMARY KEY NOT NULL,
-	"rehomer_last_active_at" timestamp with time zone,
-	"adopter_last_active_at" timestamp with time zone,
-	"created_at" timestamp with time zone NOT NULL,
-	"last_message_at" timestamp with time zone,
-	"adopter_id" uuid NOT NULL,
-	"rehomer_id" uuid NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "animal_photos" (
-	"animal_photo_id" serial PRIMARY KEY NOT NULL,
-	"animal_id" integer NOT NULL,
-	"photo_url" text NOT NULL,
-	"order" integer NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "swipes" (
-	"swipe_id" serial PRIMARY KEY NOT NULL,
-	"animal_id" integer NOT NULL,
-	"swiped_at" timestamp with time zone NOT NULL,
-	"rehomer_id" uuid NOT NULL,
-	"potential_adopter_id" uuid NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"sender_id" uuid NOT NULL,
+	"message_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"conversation_id" uuid DEFAULT gen_random_uuid() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user_search_preferences" (
-	"user_search_preference_id" serial PRIMARY KEY NOT NULL,
-	"min_age_months" real,
-	"max_age_months" real,
-	"neutered" boolean,
 	"gender" varchar(50),
 	"max_distance_km" integer,
 	"user_id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"neutered" boolean DEFAULT false NOT NULL,
+	"min_age_months" real,
+	"max_age_months" real,
+	"user_search_preference_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"location" "geography" NOT NULL,
+	"location_display_name" text,
 	CONSTRAINT "user_search_preferences_user_id_key" UNIQUE("user_id")
 );
 --> statement-breakpoint
-CREATE TABLE "notifications" (
-	"notification_id" serial PRIMARY KEY NOT NULL,
-	"content" text NOT NULL,
-	"redirect_url" text NOT NULL,
-	"seen" boolean DEFAULT false,
-	"created_at" timestamp with time zone NOT NULL,
-	"target_user_id" uuid NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "animals_adopted" (
-	"adoption_id" bigint PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY (sequence name "animals_adopted_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
-	"created_at" timestamp with time zone NOT NULL,
-	"animal_id" integer NOT NULL,
-	"rehomer_id" uuid NOT NULL
+CREATE TABLE "swipes" (
+	"swiped_at" timestamp with time zone NOT NULL,
+	"rehomer_id" uuid NOT NULL,
+	"potential_adopter_id" uuid NOT NULL,
+	"swipe_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "animals" (
-	"animal_id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(200) NOT NULL,
 	"gender" varchar(50) NOT NULL,
 	"age_in_weeks" real NOT NULL,
-	"neutered" boolean NOT NULL,
 	"address_display_name" text NOT NULL,
 	"description" text NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"last_updated_at" timestamp with time zone,
-	"address_latitude" numeric(8, 6) NOT NULL,
-	"address_longitude" numeric(9, 6) NOT NULL,
-	"rehomer_id" uuid NOT NULL
+	"rehomer_id" uuid NOT NULL,
+	"neutered" boolean NOT NULL,
+	"animal_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"address" "geography" NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "animals_adopted" (
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"rehomer_id" uuid NOT NULL,
+	"animal_id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"animal_adoption_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "animal_photos" (
+	"photo_url" text NOT NULL,
+	"order" integer NOT NULL,
+	"animal_id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"animal_photo_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "notifications" (
+	"content" text NOT NULL,
+	"redirect_url" text NOT NULL,
+	"seen" boolean DEFAULT false,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"target_user_id" uuid NOT NULL,
+	"notification_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "auth"."oauth_authorizations" (
+	"id" uuid NOT NULL,
+	"authorization_id" text NOT NULL,
+	"client_id" uuid NOT NULL,
+	"user_id" uuid,
+	"redirect_uri" text NOT NULL,
+	"scope" text NOT NULL,
+	"state" text,
+	"resource" text,
+	"code_challenge" text,
+	"code_challenge_method" "auth"."code_challenge_method",
+	"response_type" "auth"."oauth_response_type" DEFAULT 'code' NOT NULL,
+	"status" "auth"."oauth_authorization_status" DEFAULT 'pending' NOT NULL,
+	"authorization_code" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"expires_at" timestamp with time zone DEFAULT (now() + '00:03:00'::interval) NOT NULL,
+	"approved_at" timestamp with time zone,
+	"nonce" text,
+	CONSTRAINT "oauth_authorizations_authorization_code_length" CHECK (char_length(authorization_code) <= 255),
+	CONSTRAINT "oauth_authorizations_code_challenge_length" CHECK (char_length(code_challenge) <= 128),
+	CONSTRAINT "oauth_authorizations_expires_at_future" CHECK (expires_at > created_at),
+	CONSTRAINT "oauth_authorizations_nonce_length" CHECK (char_length(nonce) <= 255),
+	CONSTRAINT "oauth_authorizations_redirect_uri_length" CHECK (char_length(redirect_uri) <= 2048),
+	CONSTRAINT "oauth_authorizations_resource_length" CHECK (char_length(resource) <= 2048),
+	CONSTRAINT "oauth_authorizations_scope_length" CHECK (char_length(scope) <= 4096),
+	CONSTRAINT "oauth_authorizations_state_length" CHECK (char_length(state) <= 4096)
+);
+--> statement-breakpoint
+CREATE TABLE "auth"."oauth_consents" (
+	"id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
+	"client_id" uuid NOT NULL,
+	"scopes" text NOT NULL,
+	"granted_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"revoked_at" timestamp with time zone,
+	CONSTRAINT "oauth_consents_revoked_after_granted" CHECK ((revoked_at IS NULL) OR (revoked_at >= granted_at)),
+	CONSTRAINT "oauth_consents_scopes_length" CHECK (char_length(scopes) <= 2048),
+	CONSTRAINT "oauth_consents_scopes_not_empty" CHECK (char_length(TRIM(BOTH FROM scopes)) > 0)
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."sso_domains" ADD CONSTRAINT "sso_domains_sso_provider_id_fkey" FOREIGN KEY ("sso_provider_id") REFERENCES "auth"."sso_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -343,33 +399,37 @@ ALTER TABLE "auth"."mfa_factors" ADD CONSTRAINT "mfa_factors_user_id_fkey" FOREI
 ALTER TABLE "auth"."refresh_tokens" ADD CONSTRAINT "refresh_tokens_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "auth"."sessions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."saml_relay_states" ADD CONSTRAINT "saml_relay_states_flow_state_id_fkey" FOREIGN KEY ("flow_state_id") REFERENCES "auth"."flow_state"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."saml_relay_states" ADD CONSTRAINT "saml_relay_states_sso_provider_id_fkey" FOREIGN KEY ("sso_provider_id") REFERENCES "auth"."sso_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."mfa_amr_claims" ADD CONSTRAINT "mfa_amr_claims_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "auth"."sessions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."identities" ADD CONSTRAINT "identities_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."one_time_tokens" ADD CONSTRAINT "one_time_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."mfa_challenges" ADD CONSTRAINT "mfa_challenges_auth_factor_id_fkey" FOREIGN KEY ("factor_id") REFERENCES "auth"."mfa_factors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_user_type_id_fkey" FOREIGN KEY ("user_type_id") REFERENCES "public"."usertypes"("user_type_id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "messages" ADD CONSTRAINT "fk_messages_users" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "messages" ADD CONSTRAINT "messages_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations"("conversation_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_oauth_client_id_fkey" FOREIGN KEY ("oauth_client_id") REFERENCES "auth"."oauth_clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "conversations" ADD CONSTRAINT "fk_conversations_adopterid_users" FOREIGN KEY ("adopter_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "conversations" ADD CONSTRAINT "fk_conversations_rehomerid__users" FOREIGN KEY ("rehomer_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animal_photos" ADD CONSTRAINT "animal_photos_animal_id_fkey" FOREIGN KEY ("animal_id") REFERENCES "public"."animals"("animal_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_user_type_id_fkey" FOREIGN KEY ("user_type_id") REFERENCES "public"."usertypes"("user_type_id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "fk_messages_users" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations"("conversation_id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_search_preferences" ADD CONSTRAINT "fk_user_search_preferences_users" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "swipes" ADD CONSTRAINT "fk_swipes_adopterid_users" FOREIGN KEY ("potential_adopter_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "swipes" ADD CONSTRAINT "fk_swipes_users" FOREIGN KEY ("rehomer_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "swipes" ADD CONSTRAINT "swipes_animal_id_fkey" FOREIGN KEY ("animal_id") REFERENCES "public"."animals"("animal_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_search_preferences" ADD CONSTRAINT "fk_user_search_preferences_users" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_users" FOREIGN KEY ("target_user_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animals_adopted" ADD CONSTRAINT "animals_adopted_animal_id_fkey" FOREIGN KEY ("animal_id") REFERENCES "public"."animals"("animal_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animals_adopted" ADD CONSTRAINT "fk_animals_adopted_rehomerid__users" FOREIGN KEY ("rehomer_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "animals" ADD CONSTRAINT "fk_animals_rehomerid__users" FOREIGN KEY ("rehomer_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "oauth_clients_client_id_idx" ON "auth"."oauth_clients" USING btree ("client_id" text_ops);--> statement-breakpoint
-CREATE INDEX "oauth_clients_deleted_at_idx" ON "auth"."oauth_clients" USING btree ("deleted_at" timestamptz_ops);--> statement-breakpoint
+ALTER TABLE "animals_adopted" ADD CONSTRAINT "animals_adopted_animal_id_fkey" FOREIGN KEY ("animal_id") REFERENCES "public"."animals"("animal_id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "animals_adopted" ADD CONSTRAINT "fk_animals_adopted_rehomerid__users" FOREIGN KEY ("rehomer_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "animal_photos" ADD CONSTRAINT "animal_photos_animal_id_fkey" FOREIGN KEY ("animal_id") REFERENCES "public"."animals"("animal_id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_users" FOREIGN KEY ("target_user_id") REFERENCES "public"."users"("user_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."oauth_authorizations" ADD CONSTRAINT "oauth_authorizations_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "auth"."oauth_clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."oauth_authorizations" ADD CONSTRAINT "oauth_authorizations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."oauth_consents" ADD CONSTRAINT "oauth_consents_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "auth"."oauth_clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."oauth_consents" ADD CONSTRAINT "oauth_consents_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "sso_domains_domain_idx" ON "auth"."sso_domains" USING btree (lower(domain) text_ops);--> statement-breakpoint
 CREATE INDEX "sso_domains_sso_provider_id_idx" ON "auth"."sso_domains" USING btree ("sso_provider_id" uuid_ops);--> statement-breakpoint
+CREATE INDEX "oauth_clients_deleted_at_idx" ON "auth"."oauth_clients" USING btree ("deleted_at" timestamptz_ops);--> statement-breakpoint
 CREATE INDEX "saml_providers_sso_provider_id_idx" ON "auth"."saml_providers" USING btree ("sso_provider_id" uuid_ops);--> statement-breakpoint
 CREATE UNIQUE INDEX "sso_providers_resource_id_idx" ON "auth"."sso_providers" USING btree (lower(resource_id) text_ops);--> statement-breakpoint
 CREATE INDEX "sso_providers_resource_id_pattern_idx" ON "auth"."sso_providers" USING btree ("resource_id" text_pattern_ops);--> statement-breakpoint
+CREATE INDEX "idx_oauth_client_states_created_at" ON "auth"."oauth_client_states" USING btree ("created_at" timestamptz_ops);--> statement-breakpoint
 CREATE INDEX "factor_id_created_at_idx" ON "auth"."mfa_factors" USING btree ("user_id" timestamptz_ops,"created_at" uuid_ops);--> statement-breakpoint
 CREATE UNIQUE INDEX "mfa_factors_user_friendly_name_unique" ON "auth"."mfa_factors" USING btree ("friendly_name" text_ops,"user_id" uuid_ops) WHERE (TRIM(BOTH FROM friendly_name) <> ''::text);--> statement-breakpoint
 CREATE INDEX "mfa_factors_user_id_idx" ON "auth"."mfa_factors" USING btree ("user_id" uuid_ops);--> statement-breakpoint
@@ -392,9 +452,6 @@ CREATE INDEX "audit_logs_instance_id_idx" ON "auth"."audit_log_entries" USING bt
 CREATE INDEX "saml_relay_states_created_at_idx" ON "auth"."saml_relay_states" USING btree ("created_at" timestamptz_ops);--> statement-breakpoint
 CREATE INDEX "saml_relay_states_for_email_idx" ON "auth"."saml_relay_states" USING btree ("for_email" text_ops);--> statement-breakpoint
 CREATE INDEX "saml_relay_states_sso_provider_id_idx" ON "auth"."saml_relay_states" USING btree ("sso_provider_id" uuid_ops);--> statement-breakpoint
-CREATE INDEX "sessions_not_after_idx" ON "auth"."sessions" USING btree ("not_after" timestamptz_ops);--> statement-breakpoint
-CREATE INDEX "sessions_user_id_idx" ON "auth"."sessions" USING btree ("user_id" uuid_ops);--> statement-breakpoint
-CREATE INDEX "user_id_created_at_idx" ON "auth"."sessions" USING btree ("user_id" uuid_ops,"created_at" timestamptz_ops);--> statement-breakpoint
 CREATE INDEX "flow_state_created_at_idx" ON "auth"."flow_state" USING btree ("created_at" timestamptz_ops);--> statement-breakpoint
 CREATE INDEX "idx_auth_code" ON "auth"."flow_state" USING btree ("auth_code" text_ops);--> statement-breakpoint
 CREATE INDEX "idx_user_id_auth_method" ON "auth"."flow_state" USING btree ("user_id" uuid_ops,"authentication_method" uuid_ops);--> statement-breakpoint
@@ -403,5 +460,14 @@ CREATE INDEX "identities_user_id_idx" ON "auth"."identities" USING btree ("user_
 CREATE INDEX "one_time_tokens_relates_to_hash_idx" ON "auth"."one_time_tokens" USING hash ("relates_to" text_ops);--> statement-breakpoint
 CREATE INDEX "one_time_tokens_token_hash_hash_idx" ON "auth"."one_time_tokens" USING hash ("token_hash" text_ops);--> statement-breakpoint
 CREATE UNIQUE INDEX "one_time_tokens_user_id_token_type_key" ON "auth"."one_time_tokens" USING btree ("user_id" uuid_ops,"token_type" uuid_ops);--> statement-breakpoint
-CREATE INDEX "mfa_challenge_created_at_idx" ON "auth"."mfa_challenges" USING btree ("created_at" timestamptz_ops);
+CREATE INDEX "mfa_challenge_created_at_idx" ON "auth"."mfa_challenges" USING btree ("created_at" timestamptz_ops);--> statement-breakpoint
+CREATE INDEX "sessions_not_after_idx" ON "auth"."sessions" USING btree ("not_after" timestamptz_ops);--> statement-breakpoint
+CREATE INDEX "sessions_oauth_client_id_idx" ON "auth"."sessions" USING btree ("oauth_client_id" uuid_ops);--> statement-breakpoint
+CREATE INDEX "sessions_user_id_idx" ON "auth"."sessions" USING btree ("user_id" uuid_ops);--> statement-breakpoint
+CREATE INDEX "user_id_created_at_idx" ON "auth"."sessions" USING btree ("user_id" uuid_ops,"created_at" timestamptz_ops);--> statement-breakpoint
+CREATE INDEX "animals_address" ON "animals" USING gist ("address" gist_geography_ops);--> statement-breakpoint
+CREATE INDEX "oauth_auth_pending_exp_idx" ON "auth"."oauth_authorizations" USING btree ("expires_at" timestamptz_ops) WHERE (status = 'pending'::auth.oauth_authorization_status);--> statement-breakpoint
+CREATE INDEX "oauth_consents_active_client_idx" ON "auth"."oauth_consents" USING btree ("client_id" uuid_ops) WHERE (revoked_at IS NULL);--> statement-breakpoint
+CREATE INDEX "oauth_consents_active_user_client_idx" ON "auth"."oauth_consents" USING btree ("user_id" uuid_ops,"client_id" uuid_ops) WHERE (revoked_at IS NULL);--> statement-breakpoint
+CREATE INDEX "oauth_consents_user_order_idx" ON "auth"."oauth_consents" USING btree ("user_id" timestamptz_ops,"granted_at" timestamptz_ops);
 */

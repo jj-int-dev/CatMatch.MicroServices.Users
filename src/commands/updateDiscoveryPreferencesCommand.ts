@@ -1,6 +1,5 @@
-import { userSearchPreferences } from '../database-migrations/schema';
 import { db } from '../utils/databaseClient';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { DiscoveryPreferencesSchema } from '../validators/requests/discoveryPreferencesValidator';
 
 /**
@@ -13,16 +12,18 @@ export default async function (
   userId: string,
   discoveryPreferences: DiscoveryPreferencesSchema
 ): Promise<number> {
-  const updatedRows = await db
-    .update(userSearchPreferences)
-    .set({
-      minAgeMonths: discoveryPreferences.minAge,
-      maxAgeMonths: discoveryPreferences.maxAge,
-      gender: discoveryPreferences.gender,
-      maxDistanceKm: discoveryPreferences.maxDistanceKm
-    })
-    .where(eq(userSearchPreferences.userId, userId))
-    .returning();
+  const updatedRows = await db.execute(sql`
+      UPDATE user_search_preferences
+      SET
+        min_age_months = ${discoveryPreferences.minAge},
+        max_age_months = ${discoveryPreferences.maxAge},
+        gender = ${discoveryPreferences.gender},
+        max_distance_km = ${discoveryPreferences.maxDistanceKm},
+        neutered = ${discoveryPreferences.neutered},
+        location_display_name = ${discoveryPreferences.locationDisplayName},
+        location = ST_SetSRID(ST_MakePoint(${discoveryPreferences.searchLocLongitude}, ${discoveryPreferences.searchLocLatitude}), 4326)::geography
+      WHERE user_id = ${userId}
+      RETURNING *;`);
 
   // Return the number of updated rows
   return updatedRows.length;
