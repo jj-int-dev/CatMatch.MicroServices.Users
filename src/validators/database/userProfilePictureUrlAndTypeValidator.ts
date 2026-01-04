@@ -6,7 +6,7 @@ export const userProfilePictureUrlAndTypeValidator = z
       .string()
       .regex(/^https:\/\/.+/)
       .nullable(),
-    userType: z.object({ type: z.literal(['Rehomer', 'Adopter']) }).nullable()
+    userType: z.object({ type: z.enum(['Rehomer', 'Adopter']) }).nullable()
   })
   .optional();
 

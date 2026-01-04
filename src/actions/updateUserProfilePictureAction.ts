@@ -1,4 +1,3 @@
-import deleteUserProfilePictureCommand from '../commands/deleteUserProfilePictureCommand';
 import { uploadUserProfilePictureCommand } from '../commands/uploadUserProfilePictureCommand';
 import updateUserProfilePictureUrlCommand from '../commands/updateUserProfilePictureUrlCommand';
 import HttpResponseError from '../dtos/httpResponseError';
@@ -18,14 +17,6 @@ export default async function (
   const baseErrorMsg =
     'Error occurred while attempting to update profile picture';
 
-  // delete any existing profile pictures for this user from storage
-  const deleteFilesErrorMsg = await deleteUserProfilePictureCommand(userId);
-
-  if (deleteFilesErrorMsg) {
-    console.error(`${baseErrorMsg}: ${deleteFilesErrorMsg}`);
-    throw new HttpResponseError(500, baseErrorMsg);
-  }
-
   const { publicUrl, error } = await uploadUserProfilePictureCommand(
     userId,
     profilePicture
@@ -42,11 +33,11 @@ export default async function (
   );
 
   // return updated user profile picture url
-  if (numUpdatedRows > 0) {
+  if (numUpdatedRows > 0 && publicUrl) {
     console.log(
       `${numUpdatedRows} records updated, successfully updated profile picture of user with userId ${userId}. Exiting UpdateUserProfilePictureAction...`
     );
-    return publicUrl!;
+    return publicUrl;
   }
 
   console.error(

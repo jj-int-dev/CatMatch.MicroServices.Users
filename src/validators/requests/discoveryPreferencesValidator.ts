@@ -5,7 +5,7 @@ const discoveryPreferencesValidations = z
   .object({
     minAge: z.number().min(0, 'Invalid minimum age'),
     maxAge: z.number().max(480, 'Invalid maximum age'),
-    gender: z.literal(['', 'Male', 'Female'], 'Invalid gender'),
+    gender: z.enum(['', 'Male', 'Female'], 'Invalid gender'),
     maxDistanceKm: z
       .number()
       .min(1, 'Invalid maximum distance')

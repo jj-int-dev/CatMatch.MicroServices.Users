@@ -1,14 +1,15 @@
 import multer from 'multer';
 import type { Request, Response, NextFunction } from 'express';
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from '../../utils/constants';
+import {
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_AVATAR_PHOTO_TYPE
+} from '../../utils/constants';
 
 // Use memory storage to access file buffer (e.g., for Supabase upload)
 const storage = multer.memoryStorage();
 
 const fileFilter: multer.Options['fileFilter'] = (_request, file, callback) => {
-  if (
-    !Object.prototype.hasOwnProperty.call(ALLOWED_FILE_TYPES, file.mimetype)
-  ) {
+  if (file.mimetype.split('/').at(-1) !== ALLOWED_AVATAR_PHOTO_TYPE) {
     return callback(
       new Error('Invalid file type. Only JPG, PNG, and WEBP are allowed.')
     );

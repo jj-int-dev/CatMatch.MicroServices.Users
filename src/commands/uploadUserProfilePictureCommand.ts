@@ -1,5 +1,5 @@
 import {
-  ALLOWED_FILE_TYPES,
+  ALLOWED_AVATAR_PHOTO_TYPE,
   PROFILE_PICTURE_STORAGE_BUCKET
 } from '../utils/constants';
 import { supabase } from '../utils/supabaseClient';
@@ -19,7 +19,7 @@ export async function uploadUserProfilePictureCommand(
   userId: string,
   profilePicture: Express.Multer.File
 ): ImageUploadResponse {
-  const picturePath = `${userId}/profile_picture.${ALLOWED_FILE_TYPES[profilePicture.mimetype]}`;
+  const picturePath = `${userId}/profile_picture.${ALLOWED_AVATAR_PHOTO_TYPE}`;
 
   const { error: uploadError } = await supabase.storage
     .from(PROFILE_PICTURE_STORAGE_BUCKET)

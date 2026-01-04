@@ -3,9 +3,12 @@ import * as z from 'zod';
 
 // we allow fields to be empty strings in case user wants to clear previously set values
 const userProfileDataValidations = z.object({
-  displayName: z.string().min(1, { message: 'Display name is required' }),
+  displayName: z
+    .string()
+    .min(1, { message: 'Display name is required' })
+    .max(200, { message: 'Display name must be 200 characters or less' }),
   phoneNumber: z.union([z.e164(), z.literal('')]), //empty string or E.164 format phone number
-  gender: z.literal(['Man', 'Woman', '']),
+  gender: z.enum(['Man', 'Woman', '']),
   dateOfBirth: z.union([
     z.literal(''),
     z.iso.date().refine((date) => new Date(date) < new Date(), {
@@ -13,7 +16,7 @@ const userProfileDataValidations = z.object({
     })
   ]),
   bio: z.string(),
-  userType: z.literal(['Rehomer', 'Adopter']).optional()
+  userType: z.enum(['Rehomer', 'Adopter']).optional()
 });
 
 export type UserProfileDataSchema = z.infer<typeof userProfileDataValidations>;

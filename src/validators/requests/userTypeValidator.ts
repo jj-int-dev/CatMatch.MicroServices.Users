@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import * as z from 'zod';
 
 const userTypeValidations = z.object({
-  userType: z.literal(['Rehomer', 'Adopter'])
+  userType: z.enum(['Rehomer', 'Adopter'])
 });
 
 export function userTypeValidator(
