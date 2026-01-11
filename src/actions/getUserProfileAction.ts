@@ -1,6 +1,8 @@
 import { getUserProfileCommand } from '../commands/getUserProfileCommand';
-import userProfileSchemaToUserProfile from '../mappers/userProfileSchemaToUserProfile';
-import type { UserProfile } from '../dtos/userProfile';
+import {
+  toUserProfile,
+  type UserProfile
+} from '../mappers/userProfileSchemaToUserProfile';
 import HttpResponseError from '../dtos/httpResponseError';
 
 export type GetUserProfileActionResponse = Promise<UserProfile>;
@@ -18,7 +20,7 @@ export async function getUserProfileAction(
   const { success, data, error } = await getUserProfileCommand(userId);
 
   if (success && data) {
-    const profileDetails = userProfileSchemaToUserProfile(data);
+    const profileDetails = toUserProfile(data);
     console.log(
       `Successfully retrieved profile for user with userId ${userId}\nExiting GetUserProfilePictureAction ...`
     );

@@ -15,6 +15,6 @@ export const userProfileValidator = z
       })
       .nullable()
   })
-  .optional();
+  .nullish();
 
 export type UserProfileSchema = z.infer<typeof userProfileValidator>;
