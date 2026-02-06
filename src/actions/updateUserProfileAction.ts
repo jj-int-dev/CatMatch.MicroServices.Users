@@ -1,8 +1,8 @@
 import updateUserProfileDataCommand from '../commands/updateUserProfileDataCommand';
 import HttpResponseError from '../dtos/httpResponseError';
-import type { UserProfile } from '../dtos/userProfile';
 import type { UserProfileDataSchema } from '../validators/requests/userProfileDataValidator';
 import { getUserProfileAction } from './getUserProfileAction';
+import type { UserProfile } from '../mappers/userProfileSchemaToUserProfile';
 
 export type UpdateUserProfileActionResponse = Promise<UserProfile>;
 

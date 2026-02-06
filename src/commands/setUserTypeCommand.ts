@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 
 /**
  *
- * @param userId The ID of the user whose user type should be updated
+ * @param userId The ID of the user whose user type should be set
  * @param userTypeId The ID of the user type that the user will be assigned
  * @returns The amount of rows in the database that were updated
  */
