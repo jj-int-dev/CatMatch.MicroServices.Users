@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../utils/databaseClient';
-import { users } from '../database-migrations/schema';
+import { users, usertypes } from '../database-migrations/schema';
 import {
   userProfileValidator,
   type UserProfileSchema
@@ -20,21 +20,18 @@ export async function getUserProfileCommand(
   userId: string
 ): GetUserProfileCommandResponse {
   return userProfileValidator.safeParse(
-    await db.query.users.findFirst({
-      columns: {
-        email: true,
-        displayName: true,
-        phoneNumber: true,
-        gender: true,
-        dateOfBirth: true,
-        bio: true
-      },
-      with: {
-        userType: {
-          columns: { type: true }
-        }
-      },
-      where: eq(users.userId, userId)
-    })
+    await db
+      .select({
+        email: users.email,
+        displayName: users.displayName,
+        phoneNumber: users.phoneNumber,
+        gender: users.gender,
+        dateOfBirth: users.dateOfBirth,
+        bio: users.bio,
+        userType: usertypes.type
+      })
+      .from(users)
+      .leftJoin(usertypes, eq(users.userTypeId, usertypes.userTypeId))
+      .where(eq(users.userId, userId))
   );
 }

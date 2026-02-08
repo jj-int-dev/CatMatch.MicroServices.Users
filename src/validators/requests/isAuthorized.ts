@@ -17,7 +17,7 @@ export default async function (
       if (!userData.error && userData.data?.user?.aud === 'authenticated') {
         return next();
       }
-      errorMsg = `Unauthorized request:\nAccessToken=${accessToken}\nRefreshToken=${refreshToken}\nUser Data:\n${userData}`;
+      errorMsg = `Unauthorized request:\nAccessToken=${accessToken}\nRefreshToken=${refreshToken}\nUser Data:\n${{ ...userData }}`;
     }
 
     errorMsg ??= `Unauthorized request: Invalid/missing access token and/or refresh token. Headers sent from request:\n${req.headers}`;

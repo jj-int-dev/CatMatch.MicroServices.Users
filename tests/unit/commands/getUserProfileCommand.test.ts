@@ -9,44 +9,46 @@ describe('getUserProfileCommand', () => {
   });
 
   it('should return user profile when found', async () => {
-    const mockUserData = {
-      email: 'test@example.com',
-      displayName: 'John Doe',
-      phoneNumber: '+1234567890',
-      gender: 'Man',
-      dateOfBirth: '1990-01-15',
-      bio: 'Cat lover',
-      userType: { type: 'Adopter' }
-    };
+    const mockUserData = [
+      {
+        email: 'test@example.com',
+        displayName: 'John Doe',
+        phoneNumber: '+1234567890',
+        gender: 'Man',
+        dateOfBirth: '1990-01-15',
+        bio: 'Cat lover',
+        userType: 'Adopter'
+      }
+    ];
 
-    mockDb.query.users.findFirst.mockResolvedValue(mockUserData);
+    // Mock the query chain: select().from().leftJoin().where()
+    mockDb.where.mockResolvedValue(mockUserData);
 
     const result = await getUserProfileCommand('user-123');
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual(mockUserData);
-    expect(mockDb.query.users.findFirst).toHaveBeenCalledOnce();
+    expect(mockDb._selectFn).toHaveBeenCalled();
+    expect(mockDb._fromFn).toHaveBeenCalled();
+    expect(mockDb._leftJoinFn).toHaveBeenCalled();
+    expect(mockDb.where).toHaveBeenCalled();
   });
 
   it('should handle null user data', async () => {
-    mockDb.query.users.findFirst.mockResolvedValue(null);
+    mockDb.where.mockResolvedValue(null);
 
     const result = await getUserProfileCommand('non-existent-user');
 
-    // nullish() validator accepts null/undefined as valid
-    expect(result.success).toBe(true);
-    expect(result.data).toBeNull();
-    expect(mockDb.query.users.findFirst).toHaveBeenCalledOnce();
+    // Validator expects an array, so null should fail validation
+    expect(result.success).toBe(false);
   });
 
   it('should handle undefined user data', async () => {
-    mockDb.query.users.findFirst.mockResolvedValue(undefined);
+    mockDb.where.mockResolvedValue(undefined);
 
     const result = await getUserProfileCommand('non-existent-user');
 
-    // nullish() validator accepts null/undefined as valid
-    expect(result.success).toBe(true);
-    expect(result.data).toBeUndefined();
-    expect(mockDb.query.users.findFirst).toHaveBeenCalledOnce();
+    // Validator expects an array, so undefined should fail validation
+    expect(result.success).toBe(false);
   });
 });

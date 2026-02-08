@@ -1,10 +1,10 @@
 import updateUserProfileDataCommand from '../commands/updateUserProfileDataCommand';
 import HttpResponseError from '../dtos/httpResponseError';
 import type { UserProfileDataSchema } from '../validators/requests/userProfileDataValidator';
-import { getUserProfileAction } from './getUserProfileAction';
-import type { UserProfile } from '../mappers/userProfileSchemaToUserProfile';
-
-export type UpdateUserProfileActionResponse = Promise<UserProfile>;
+import {
+  getUserProfileAction,
+  type GetUserProfileActionResponse
+} from './getUserProfileAction';
 
 /**
  *
@@ -16,7 +16,7 @@ export type UpdateUserProfileActionResponse = Promise<UserProfile>;
 export async function updateUserProfileAction(
   userId: string,
   newProfileData: UserProfileDataSchema
-): UpdateUserProfileActionResponse {
+): GetUserProfileActionResponse {
   console.log('Entering UpdateUserProfileAction ...');
 
   // update the rest of the user profile data

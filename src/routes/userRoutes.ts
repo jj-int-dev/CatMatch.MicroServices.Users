@@ -280,7 +280,7 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userProfile = await getUserProfileAction(req.params.userId!);
-      return res.status(200).json({ ...userProfile });
+      return res.status(200).json(userProfile);
     } catch (error) {
       return getErrorResponseJson(error, res);
     }

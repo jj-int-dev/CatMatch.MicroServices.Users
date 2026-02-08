@@ -11,15 +11,17 @@ describe('getUserProfileAction', () => {
   });
 
   it('should return user profile on success', async () => {
-    const mockData = {
-      email: 'test@example.com',
-      displayName: 'John Doe',
-      phoneNumber: '+1234567890',
-      gender: 'Man',
-      dateOfBirth: '1990-01-15',
-      bio: 'Cat lover',
-      userType: { type: 'Adopter' }
-    };
+    const mockData = [
+      {
+        email: 'test@example.com',
+        displayName: 'John Doe',
+        phoneNumber: '+1234567890',
+        gender: 'Man',
+        dateOfBirth: '1990-01-15',
+        bio: 'Cat lover',
+        userType: 'Adopter'
+      }
+    ];
 
     vi.spyOn(getUserProfileCommand, 'getUserProfileCommand').mockResolvedValue({
       success: true,

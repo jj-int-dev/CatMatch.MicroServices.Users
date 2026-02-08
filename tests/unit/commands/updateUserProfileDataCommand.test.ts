@@ -17,16 +17,14 @@ describe('updateUserProfileDataCommand', () => {
       bio: 'Cat lover'
     };
 
-    mockDb.update.mockReturnValue(mockDb);
-    mockDb.set.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.returning.mockResolvedValue([{ userId: 'user-123' }]);
+    mockDb._returningFn.mockResolvedValue([{ userId: 'user-123' }]);
 
     const result = await updateUserProfileDataCommand('user-123', profileData);
 
     expect(result).toBe(1);
-    expect(mockDb.update).toHaveBeenCalledOnce();
-    expect(mockDb.set).toHaveBeenCalledWith(
+    expect(mockDb._updateFn).toHaveBeenCalledOnce();
+    expect(mockDb._setFn).toHaveBeenCalledWith(
       expect.objectContaining({
         displayName: 'John Doe',
         phoneNumber: '+1234567890',
@@ -47,15 +45,13 @@ describe('updateUserProfileDataCommand', () => {
       userType: 'Adopter' as const
     };
 
-    mockDb.update.mockReturnValue(mockDb);
-    mockDb.set.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.returning.mockResolvedValue([{ userId: 'user-123' }]);
+    mockDb._returningFn.mockResolvedValue([{ userId: 'user-123' }]);
 
     const result = await updateUserProfileDataCommand('user-123', profileData);
 
     expect(result).toBe(1);
-    expect(mockDb.set).toHaveBeenCalledWith(
+    expect(mockDb._setFn).toHaveBeenCalledWith(
       expect.objectContaining({
         userType: 'Adopter'
       })
@@ -71,10 +67,8 @@ describe('updateUserProfileDataCommand', () => {
       bio: 'Cat lover'
     };
 
-    mockDb.update.mockReturnValue(mockDb);
-    mockDb.set.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.returning.mockResolvedValue([]);
+    mockDb._returningFn.mockResolvedValue([]);
 
     const result = await updateUserProfileDataCommand('user-123', profileData);
 

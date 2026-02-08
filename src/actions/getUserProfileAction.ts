@@ -1,11 +1,15 @@
 import { getUserProfileCommand } from '../commands/getUserProfileCommand';
-import {
-  toUserProfile,
-  type UserProfile
-} from '../mappers/userProfileSchemaToUserProfile';
 import HttpResponseError from '../dtos/httpResponseError';
 
-export type GetUserProfileActionResponse = Promise<UserProfile>;
+export type GetUserProfileActionResponse = Promise<{
+  email: string;
+  displayName: string | null;
+  phoneNumber: string | null;
+  gender: string | null;
+  dateOfBirth: string | null;
+  bio: string | null;
+  userType: string | null;
+}>;
 
 /**
  *
@@ -19,12 +23,11 @@ export async function getUserProfileAction(
   console.log('Entering GetUserProfileAction ...');
   const { success, data, error } = await getUserProfileCommand(userId);
 
-  if (success && data) {
-    const profileDetails = toUserProfile(data);
+  if (success && data?.length > 0) {
     console.log(
       `Successfully retrieved profile for user with userId ${userId}\nExiting GetUserProfilePictureAction ...`
     );
-    return profileDetails;
+    return data[0]!;
   }
 
   const errorMsg = `Could not find the profile for user ${userId}`;

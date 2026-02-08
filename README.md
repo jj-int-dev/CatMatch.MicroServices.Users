@@ -153,7 +153,6 @@ npm run test:ui
 │   ├── config/           # Configuration files
 │   ├── database-migrations/  # Database schema and migrations
 │   ├── dtos/             # Data transfer objects
-│   ├── mappers/          # Data transformation utilities
 │   ├── routes/           # API route definitions
 │   ├── utils/            # Utility functions and clients
 │   ├── validators/       # Request and data validation

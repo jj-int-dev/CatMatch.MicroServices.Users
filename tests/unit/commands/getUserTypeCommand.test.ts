@@ -9,23 +9,22 @@ describe('getUserTypeCommand', () => {
   });
 
   it('should return user type when found', async () => {
-    mockDb.select.mockReturnValue(mockDb);
-    mockDb.from.mockReturnValue(mockDb);
-    mockDb.innerJoin.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.limit.mockResolvedValue([{ userType: 'Adopter' }]);
+    mockDb._limitFn.mockResolvedValue([{ userType: 'Adopter' }]);
 
     const result = await getUserTypeCommand('user-123');
 
     expect(result).toBe('Adopter');
+    expect(mockDb._selectFn).toHaveBeenCalled();
+    expect(mockDb._fromFn).toHaveBeenCalled();
+    expect(mockDb._innerJoinFn).toHaveBeenCalled();
+    expect(mockDb.where).toHaveBeenCalled();
+    expect(mockDb._limitFn).toHaveBeenCalled();
   });
 
   it('should return null when user type not found', async () => {
-    mockDb.select.mockReturnValue(mockDb);
-    mockDb.from.mockReturnValue(mockDb);
-    mockDb.innerJoin.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.limit.mockResolvedValue([]);
+    mockDb._limitFn.mockResolvedValue([]);
 
     const result = await getUserTypeCommand('user-123');
 
@@ -33,11 +32,8 @@ describe('getUserTypeCommand', () => {
   });
 
   it('should handle Rehomer user type', async () => {
-    mockDb.select.mockReturnValue(mockDb);
-    mockDb.from.mockReturnValue(mockDb);
-    mockDb.innerJoin.mockReturnValue(mockDb);
     mockDb.where.mockReturnValue(mockDb);
-    mockDb.limit.mockResolvedValue([{ userType: 'Rehomer' }]);
+    mockDb._limitFn.mockResolvedValue([{ userType: 'Rehomer' }]);
 
     const result = await getUserTypeCommand('user-456');
 
