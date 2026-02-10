@@ -11,9 +11,15 @@ const userProfileDataValidations = z.object({
   gender: z.enum(['Man', 'Woman', '']),
   dateOfBirth: z.union([
     z.literal(''),
-    z.coerce.date().refine((date) => new Date(date) < new Date(), {
-      message: 'Date of birth must be valid and before today'
-    })
+    z.string().refine(
+      (date) => {
+        const parsedDate = new Date(date);
+        return !isNaN(parsedDate.getTime()) && parsedDate < new Date();
+      },
+      {
+        message: 'Date of birth must be valid and before today'
+      }
+    )
   ]),
   bio: z.string(),
   userType: z.enum(['Rehomer', 'Adopter']).optional()

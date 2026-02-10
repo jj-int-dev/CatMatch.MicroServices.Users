@@ -8,11 +8,18 @@ export const userProfileValidator = z.array(
     gender: z.enum(['Man', 'Woman', '']).nullable(),
     bio: z.string().nullable(),
     userType: z.enum(['Rehomer', 'Adopter']).nullable(),
-    dateOfBirth: z.coerce
-      .date()
-      .refine((date) => new Date(date) < new Date(), {
-        message: 'Date of birth must be before today'
-      })
+    dateOfBirth: z
+      .string()
+      .refine(
+        (date) => {
+          if (!date) return true;
+          const parsedDate = new Date(date);
+          return !isNaN(parsedDate.getTime()) && parsedDate < new Date();
+        },
+        {
+          message: 'Date of birth must be before today'
+        }
+      )
       .nullable()
   })
 );
