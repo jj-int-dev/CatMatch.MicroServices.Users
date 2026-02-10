@@ -348,10 +348,7 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 userProfile:
- *                   $ref: '#/components/schemas/UserProfile'
+ *               $ref: '#/components/schemas/UserProfile'
  *       400:
  *         description: Invalid request - validation errors in the provided data
  *         content:
@@ -395,7 +392,7 @@ router.patch(
         req.params.userId!,
         req.body as UserProfileDataSchema
       );
-      return res.status(200).json({ userProfile: updatedUserProfile });
+      return res.status(200).json(updatedUserProfile);
     } catch (error) {
       return getErrorResponseJson(error, res);
     }
