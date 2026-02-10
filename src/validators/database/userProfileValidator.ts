@@ -8,7 +8,7 @@ export const userProfileValidator = z.array(
     gender: z.enum(['Man', 'Woman', '']).nullable(),
     bio: z.string().nullable(),
     userType: z.enum(['Rehomer', 'Adopter']).nullable(),
-    dateOfBirth: z.iso
+    dateOfBirth: z.coerce
       .date()
       .refine((date) => new Date(date) < new Date(), {
         message: 'Date of birth must be before today'
