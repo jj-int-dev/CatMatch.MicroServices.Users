@@ -20,7 +20,10 @@ export default async function (
       phoneNumber: profileData.phoneNumber,
       gender: profileData.gender,
       bio: profileData.bio,
-      dateOfBirth: profileData.dateOfBirth,
+      dateOfBirth:
+        profileData.dateOfBirth.trim().length > 0
+          ? profileData.dateOfBirth
+          : null,
       ...(Boolean(profileData.userType) && { userType: profileData.userType })
     })
     .where(eq(users.userId, userId))
