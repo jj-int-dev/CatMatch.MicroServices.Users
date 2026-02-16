@@ -4,7 +4,7 @@ export const userProfileValidator = z.array(
   z.object({
     email: z.email(),
     displayName: z.string().nullable(),
-    phoneNumber: z.e164().nullable(),
+    phoneNumber: z.string().nullable(),
     gender: z.enum(['Man', 'Woman', '']).nullable(),
     bio: z.string().nullable(),
     userType: z.enum(['Rehomer', 'Adopter']).nullable(),
