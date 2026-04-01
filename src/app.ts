@@ -6,6 +6,7 @@ import healthRoutes from './routes/healthRoutes';
 import swaggerOptions from './config/swaggerOptions';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import configureRateLimiting from './utils/configureRateLimiting';
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -42,5 +43,7 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, { explorer: true })
 );
+
+configureRateLimiting('/api/health', app);
 
 export default app;
