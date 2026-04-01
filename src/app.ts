@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import config from './config/config';
 import userRoutes from './routes/userRoutes';
+import healthRoutes from './routes/healthRoutes';
 import swaggerOptions from './config/swaggerOptions';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
@@ -33,6 +34,7 @@ app.use(cors(corsOptions));
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/health', healthRoutes);
 
 // Swagger
 app.use(
