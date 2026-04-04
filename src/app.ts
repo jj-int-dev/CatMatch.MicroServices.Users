@@ -31,11 +31,15 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 const app = express();
 
 app.use(express.json());
+
+// Separate CORS for health routes to allow all origins
+app.use('/api/health', cors(), healthRoutes);
+configureRateLimiting('/api/health', app);
+
 app.use(cors(corsOptions));
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/health', healthRoutes);
 
 // Swagger
 app.use(
@@ -43,7 +47,5 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, { explorer: true })
 );
-
-configureRateLimiting('/api/health', app);
 
 export default app;

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
 // Mock BEFORE importing app
@@ -25,8 +25,14 @@ vi.mock('../../src/utils/supabaseClient', () => ({
 }));
 
 import app from '../../src/app';
+import { db } from '../../src/utils/databaseClient';
 
 describe('Health Routes', () => {
+  beforeEach(() => {
+    vi.mocked(db.execute).mockReset();
+    vi.mocked(db.execute).mockResolvedValue(undefined as never);
+  });
+
   it('should respond with 200 on GET /api/health', async () => {
     const response = await request(app).get('/api/health');
 
@@ -66,5 +72,46 @@ describe('Health Routes', () => {
       timestamp: expect.any(String),
       uptime: expect.any(Number)
     });
+  });
+
+  it('should ping the database on each health check', async () => {
+    await request(app).get('/api/health');
+
+    expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should respond with 503 when the database is unavailable', async () => {
+    vi.mocked(db.execute).mockRejectedValueOnce(
+      new Error('DB connection failed')
+    );
+
+    const response = await request(app).get('/api/health');
+
+    expect(response.status).toBe(503);
+  });
+
+  it('should return status "FAILURE" when the database is unavailable', async () => {
+    vi.mocked(db.execute).mockRejectedValueOnce(
+      new Error('DB connection failed')
+    );
+
+    const response = await request(app).get('/api/health');
+
+    expect(response.body.status).toBe('FAILURE');
+  });
+
+  it('should still return timestamp and uptime when the database is unavailable', async () => {
+    vi.mocked(db.execute).mockRejectedValueOnce(
+      new Error('DB connection failed')
+    );
+
+    const response = await request(app).get('/api/health');
+
+    expect(response.body.timestamp).toBeDefined();
+    expect(new Date(response.body.timestamp).toISOString()).toBe(
+      response.body.timestamp
+    );
+    expect(typeof response.body.uptime).toBe('number');
+    expect(response.body.uptime).toBeGreaterThanOrEqual(0);
   });
 });
